@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛍️ Sistema de Descuentos por Fidelidad</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            max-width: 900px;
+            width: 100%;
+            padding: 40px;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            color: #2d3748;
+            font-size: 28px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .subtitle {
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #2d3748;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        label .required {
+            color: #e53e3e;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: #f7fafc;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #11998e;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(17, 153, 142, 0.1);
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-group .currency {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #718096;
+            font-weight: 600;
+        }
+
+        .input-group input {
+            padding-left: 30px;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(17, 153, 142, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .resultados {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 15px;
+            display: none;
+        }
+
+        .resultados.visible {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .resultado-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #11998e;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .resultado-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .resultado-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .resultado-header h3 {
+            color: #2d3748;
+            font-size: 18px;
+        }
+
+        .badge {
+            background: #718096;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge.bono {
+            background: #ffb100;
+            color: #2d3748;
+        }
+
+        .detalle-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .detalle-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #edf2f7;
+        }
+
+        .detalle-item .label {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .detalle-item .value {
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .detalle-item .value.total {
+            color: #11998e;
+            font-size: 18px;
+        }
+
+        .error {
+            background: #fff5f5;
+            border: 1px solid #fc8181;
+            color: #c53030;
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .error.visible {
+            display: block;
+        }
+
+        .comparativa-btn {
+            background: #edf2f7;
+            color: #2d3748;
+            padding: 10px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .comparativa-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #a0aec0;
+            font-size: 12px;
+        }
+
+        @media (max-width: 640px) {
+            .row {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            .detalle-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .total-card .value {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🛍️ Sistema de Descuentos por Fidelidad</h1>
+    <p class="subtitle">Calcula el total neto de tus compras aplicando rebajas de fidelidad y cupones digitales</p>
+
+    <form id="calculadoraForm">
+        <div class="row">
+            <div class="form-group">
+                <label>Total Bruto <span class="required">*</span></label>
+                <div class="input-group">
+                    <span class="currency">$</span>
+                    <input type="number" id="totalBruto" placeholder="Ej: 1000" step="0.01" min="0.01" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Base de Compra <span class="required">*</span></label>
+                <div class="input-group">
+                    <span class="currency">$</span>
+                    <input type="number" id="baseCompra" placeholder="Ej: 150" step="0.01" min="0" required>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Método de Pago <span class="required">*</span></label>
+            <select id="metodoPago" required>
+                <option value="">Selecciona una opción de pago...</option>
+                <option value="WM">📱 Wallet Móvil (10% + Cupón $5)</option>
+                <option value="CC">💳 Tarjeta de Crédito (5%)</option>
+                <option value="DB">🏦 Transferencia Bancaria (3%)</option>
+                <option value="PP">🅿️ PayPal Global (8%)</option>
+                <option value="CQ">💵 Cheque Comercial (2%)</option>
+                <option value="C2">🪙 Criptomonedas (12%)</option>
+                <option value="EF">💰 Efectivo en Caja (4%)</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn">📊 Calcular Descuentos</button>
+    </form>
+
+    <div id="error" class="error"></div>
+
+    <div id="resultados" class="resultados">
+        <h3 style="margin-bottom: 15px; color: #2d3748;">📋 Resumen de Facturación</h3>
+        <div id="resultadoUnico"></div>
+
+        <button id="btnComparativa" class="comparativa-btn">🔍 Comparar con otros métodos de pago</button>
+        <div id="comparativaResultados" style="margin-top: 15px;"></div>
+    </div>
+
+    <div class="footer">
+        Módulo de Ventas y Fidelización v2.0 | Documentación técnica incluida
+    </div>
+</div>
+
+<script>
+    // ============================================
+    // CONFIGURACIÓN DE MÉTODOS DE PAGO
+    // ============================================
+    const CONFIG_METODOS = {
+        wm: {
+            nombre: "Wallet Móvil",
+            porcentajeDescuento: 0.10,
+            cupon: 5,
+            moneda: "$",
+            icono: "📱"
+        },
+        cc: {
+            nombre: "Tarjeta de Crédito",
+            porcentajeDescuento: 0.05,
+            cupon: 0,
+            moneda: "$",
+            icono: "💳"
+        },
+        db: {
+            nombre: "Transferencia Bancaria",
+            porcentajeDescuento: 0.03,
+            cupon: 0,
+            moneda: "$",
+            icono: "🏦"
+        },
+        pp: {
+            nombre: "PayPal Global",
+            porcentajeDescuento: 0.08,
+            cupon: 0,
+            moneda: "$",
+            icono: "🅿️"
+        },
+        cq: {
+            nombre: "Cheque Comercial",
+            porcentajeDescuento: 0.02,
+            cupon: 0,
+            moneda: "$",
+            icono: "💵"
+        },
+        c2: {
+            nombre: "Criptomonedas",
+            porcentajeDescuento: 0.12,
+            cupon: 0,
+            moneda: "$",
+            icono: "🪙"
+        },
+        ef: {
+            nombre: "Efectivo en Caja",
+            porcentajeDescuento: 0.04,
+            cupon: 0,
+            moneda: "$",
+            icono: "💰"
+        }
+    };
+
+    // ============================================
+    // FUNCIÓN PRINCIPAL DE CÁLCULO
+    // ============================================
+    function calcularDescuentos(totalBruto, baseCompra, metodoPago) {
+        // Validaciones
+        if (totalBruto <= 0) throw new Error("El total bruto debe ser mayor a 0");
+        if (baseCompra < 0) throw new Error("La base de compra no puede ser negativa");
+        if (!metodoPago) throw new Error("Debes seleccionar un método de pago");
+
+        const config = CONFIG_METODOS[metodoPago.toLowerCase()];
+        if (!config) throw new Error(`Método de pago "${metodoPago}" no soportado`);
+
+        // Cálculos
+        const descuento = baseCompra * config.porcentajeDescuento;
+        let neto = totalBruto - descuento;
+        let cuponAplicado = 0;
+
+        if (config.cupon > 0) {
+            neto -= config.cupon;
+            cuponAplicado = config.cupon;
+        }
+
+        // Evitar saldos negativos accidentales
+        if (neto < 0) neto = 0;
+
+        neto = Math.round(neto * 100) / 100;
+        const descuentoRedondeado = Math.round(descuento * 100) / 100;
+
+        return {
+            metodo: metodoPago.toUpperCase(),
+            nombreMetodo: config.nombre,
+            icono: config.icono,
+            moneda: config.moneda,
+            totalBruto: totalBruto,
+            baseCompra: baseCompra,
+            porcentajeDescuento: config.porcentajeDescuento * 100,
+            descuentoAplicado: descuentoRedondeado,
+            cuponAplicado: cuponAplicado,
+            totalNeto: neto,
+            formula: `${totalBruto} - ${descuentoRedondeado} ${cuponAplicado > 0 ? `- ${cuponAplicado}` : ''} = ${neto}`
+        };
+    }
+
+    // ============================================
+    // FUNCIONES DE RENDERIZADO
+    // ============================================
+    function renderResultado(resultado) {
+        const hasCupon = resultado.cuponAplicado > 0;
+        
+        return `
+            <div class="resultado-card">
+                <div class="resultado-header">
+                    <h3>${resultado.icono} ${resultado.nombreMetodo} (${resultado.metodo})</h3>
+                    <span class="badge ${hasCupon ? 'bono' : ''}">
+                        ${hasCupon ? '🎯 Cupón Aplicado' : 'Sin cupón'}
+                    </span>
+                </div>
+                
+                <div class="detalle-grid">
+                    <div class="detalle-item">
+                        <span class="label">Total Bruto</span>
+                        <span class="value">${resultado.moneda} ${resultado.totalBruto}</span>
+                    </div>
+                    <div class="detalle-item">
+                        <span class="label">Base de Compra</span>
+                        <span class="value">${resultado.moneda} ${resultado.baseCompra}</span>
+                    </div>
+                    <div class="detalle-item">
+                        <span class="label">Rebaja por Fidelidad</span>
+                        <span class="value">${resultado.porcentajeDescuento}%</span>
+                    </div>
+                    <div class="detalle-item">
+                        <span class="label">Descuento Obtenido</span>
+                        <span class="value" style="color: #11998e;">-${resultado.moneda} ${resultado.descuentoAplicado}</span>
+                    </div>
+                    ${resultado.cuponAplicado > 0 ? `
+                        <div class="detalle-item">
+                            <span class="label">Beneficio Adicional</span>
+                            <span class="value" style="color: #11998e;">-${resultado.moneda} ${resultado.cuponAplicado}</span>
+                        </div>
+                    ` : ''}
+                    <div class="detalle-item" style="border-bottom: none; padding-top: 10px; margin-top: 5px; border-top: 2px solid #e2e8f0;">
+                        <span class="label" style="font-weight: 700;">Total a Pagar</span>
+                        <span class="value total">${resultado.moneda} ${resultado.totalNeto}</span>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 15px; padding: 10px; background: #f7fafc; border-radius: 8px; font-size: 13px; color: #718096;">
+                    <strong>Fórmula de Balance:</strong> ${resultado.formula}
+                </div>
+            </div>
+        `;
+    }
+
+    function renderComparativa(resultados) {
+        let html = '<h4 style="margin-bottom: 10px; color: #2d3748;">📊 Rendimiento por Pasarela de Pago</h4>';
+        
+        // Ordenar de menor a mayor costo final para el usuario
+        const sorted = Object.values(resultados).sort((a, b) => a.totalNeto - b.totalNeto);
+        
+        html += '<div style="display: grid; gap: 10px;">';
+        sorted.forEach((r, index) => {
+            const rank = index === 0 ? '🥇 Mejor Opción' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+            html += `
+                <div style="display: flex; justify-content: space-between; align-items: center; 
+                             padding: 12px 15px; background: white; border-radius: 8px; 
+                             border-left: 3px solid ${index === 0 ? '#38ef7d' : '#e2e8f0'};">
+                    <div>
+                        <span style="font-weight: 600;">${r.icono} ${r.nombreMetodo}</span>
+                        <span style="font-size: 12px; color: #718096; margin-left: 10px;">${r.porcentajeDescuento}%</span>
+                        ${r.cuponAplicado > 0 ? '<span style="font-size: 11px; color: #11998e; margin-left: 5px;">+Cupón</span>' : ''}
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-weight: 700; color: ${index === 0 ? '#11998e' : '#2d3748'};">
+                            ${r.moneda} ${r.totalNeto}
+                        </span>
+                        <span style="font-size: 13px; font-weight: 600; color: #718096;">${rank}</span>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        
+        return html;
+    }
+
+    // ============================================
+    // MANEJADORES DE EVENTOS
+    // ============================================
+    document.getElementById('calculadoraForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const totalBruto = parseFloat(document.getElementById('totalBruto').value);
+        const baseCompra = parseFloat(document.getElementById('baseCompra').value);
+        const metodoPago = document.getElementById('metodoPago').value;
+        
+        const errorDiv = document.getElementById('error');
+        const resultadosDiv = document.getElementById('resultados');
+        
+        try {
+            errorDiv.className = 'error';
+            errorDiv.textContent = '';
+            
+            const resultado = calcularDescuentos(totalBruto, baseCompra, metodoPago);
+            
+            document.getElementById('resultadoUnico').innerHTML = renderResultado(resultado);
+            document.getElementById('comparativaResultados').innerHTML = '';
+            
+            resultadosDiv.className = 'resultados visible';
+            
+        } catch (error) {
+            errorDiv.textContent = '❌ ' + error.message;
+            errorDiv.className = 'error visible';
+            resultadosDiv.className = 'resultados';
+        }
+    });
+
+    document.getElementById('btnComparativa').addEventListener('click', function() {
+        const totalBruto = parseFloat(document.getElementById('totalBruto').value);
+        const baseCompra = parseFloat(document.getElementById('baseCompra').value);
+        
+        const errorDiv = document.getElementById('error');
+        
+        if (!totalBruto || totalBruto <= 0) {
+            errorDiv.textContent = '❌ Por favor, ingresa un total de compra válido primero';
+            errorDiv.className = 'error visible';
+            return;
+        }
+        
+        errorDiv.className = 'error';
+        errorDiv.textContent = '';
+        
+        const resultados = {};
+        const metodos = ['WM', 'CC', 'DB', 'PP', 'CQ', 'C2', 'EF'];
+        
+        metodos.forEach(metodo => {
+            try {
+                resultados[metodo] = calcularDescuentos(totalBruto, baseCompra, metodo);
+            } catch (e) {
+                // Ignorar errores menores
+            }
+        });
+        
+        document.getElementById('comparativaResultados').innerHTML = renderComparativa(resultados);
+    });
+
+    // ============================================
+    // VALORES INICIALES POR DEFECTO
+    // ============================================
+    window.addEventListener('load', function() {
+        document.getElementById('totalBruto').value = '1000';
+        document.getElementById('baseCompra').value = '150';
+        document.getElementById('metodoPago').value = 'WM';
+        
+        // Ejecutar primer cálculo automáticamente
+        const event = new Event('submit');
+        document.getElementById('calculadoraForm').dispatchEvent(event);
+    });
+</script>
+
+</body>
+</html>
